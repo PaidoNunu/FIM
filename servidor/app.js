@@ -12,11 +12,12 @@ app.use(express.json())
 //Models
 const User = require('./models/User')
 //PUBLIC ROUTE
+
+ 
 app.get('/', (req,res)=>(
     res.status(200).json({msg:'Bem vindo à nossa API'})
 ))
-//PRIVATE ROUTE
-app.get('/user/:id',checkToken, async(req,res)=>{
+app.get('/user/:id', async(req,res)=>{
     const id = req.params.id
     //CHECKAR SE EXISTE
     const user = await User.findById(id, '-password')
@@ -25,6 +26,18 @@ app.get('/user/:id',checkToken, async(req,res)=>{
     }
     res.status(200).json({ user })
 })
+//PRIVATE ROUTE
+app.get('/user/:id',checkToken, async(req,res)=>{
+    const id = req.params.id
+    
+    //CHECKAR SE EXISTE
+    const user = await User.findById(id, '-password')
+    if(!user){
+        return res.status(404).json({msg:"Usuário não encontrado"})
+    }
+    res.status(200).json({ user })
+})
+
 function checkToken(req,res, next){
     const authHeader = req.headers['authorization']
     const token = authHeader && authHeader.split(" ")[1]
@@ -34,6 +47,7 @@ function checkToken(req,res, next){
     try{
         const secret = process.env.SECRET
         jwt.verify(token, secret)
+        req.user = { userId: decodedToken.user._id };
         next()
     }catch(error){
         res.status(400).json({msg:"Token Inválido"})
@@ -41,9 +55,11 @@ function checkToken(req,res, next){
 
 }
 //REGISTER USER
-app.post('/api/Cadastro', async(req, res)=>{
-    const {name, email, password, confirmpassword} =req.body
+app.post('/user', async(req, res)=>{
+    const {name, email, password, confirmPassword} =req.body
     //VALIDAÇÕES
+    
+    
     if(!name){
     return res.status(422).json({msg:"O nome é obrigatório"})
     }
@@ -53,7 +69,7 @@ app.post('/api/Cadastro', async(req, res)=>{
     if(!password){
             return res.status(422).json({msg:"A senha é obrigatória"})
         }
-    if(password != confirmpassword){
+    if(password != confirmPassword){
         return res.status(422).json({msg:"As senhas não conferem!"})
     }
     //CHECK VALIDAÇÂO USER EXISTS
@@ -61,6 +77,7 @@ app.post('/api/Cadastro', async(req, res)=>{
     if(userExists){
         return res.status(422).json({msg:"Por favor utilize outro email de usuário"})
     }
+
     //CREATE PASSWORD
     const salt = await bcrypt.genSalt(12)
     const passwordHash = await bcrypt.hash(password, salt)
@@ -70,6 +87,7 @@ app.post('/api/Cadastro', async(req, res)=>{
         email,
         password:passwordHash,
     })
+    
     try {
         await user.save()
         res.status(201).json({msg: "Usuário cadastrado"})
@@ -130,6 +148,6 @@ const dbPassword = process.env.DB_PASS
 
 mongoose.connect(`mongodb+srv://${dbUser}:${dbPassword}@cluster0.fmsufbi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`).then(()=>{
     app.listen(5000)
-    console.log("CONECTOU AO BANCO")
+    console.log("CONECTOU AO BANNCO")
 } ).catch((err)=> console.log(err))
 

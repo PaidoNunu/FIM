@@ -9,6 +9,11 @@ import PontosDescartes from './Pages/PontosDescartes'
 import Cadastro from './Pages/Cadastro'
 
 function Navbar() {
+  const api = axios.create({
+    baseURL: 'http://localhost:5000/api'
+  });
+
+  
   const abas = ["Home", "Pontos de Descartes", "Sobre", 'Entrar'];
   const links = ['', 'Descartes', 'Sobre', 'Login']
   const classes = ['botao', 'botao', 'botao1', 'entrar']
